@@ -51,6 +51,12 @@ node server.js
 
 `GET /api/catalog`
 
+### Получить новости
+
+`GET /api/news`
+
+Новости редактируются вручную в массиве `NEWS_ITEMS` внутри `server.js`.
+
 ## Как вставить на урок тестового курса
 
 В GetCourse на страницах уроков вставить код из `snippets/lesson-tracker.js`.

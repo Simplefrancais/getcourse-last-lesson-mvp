@@ -111,6 +111,39 @@ const RECOMMENDATIONS_BY_LEVEL = {
   ]
 };
 
+const NEWS_ITEMS = [
+  {
+    title: "Новый диктант",
+    subtitle: "Диктант A2 N15",
+    type: "dictation",
+    level: "A2",
+    time_label: "Сегодня",
+    url: "#",
+    icon: "A2",
+    accent: "#75d56f"
+  },
+  {
+    title: "Новый марафон",
+    subtitle: "Plus-que-parfait",
+    type: "marathon",
+    level: "A2-B1",
+    time_label: "Вчера",
+    url: COURSE_CATALOG["plus-que-parfait-marathon"].url,
+    icon: "PQ",
+    accent: "#ff8b3d"
+  },
+  {
+    title: "Новый урок",
+    subtitle: "Отрицательные местоимения",
+    type: "lesson",
+    level: "A1",
+    time_label: "2 дня назад",
+    url: "#",
+    icon: "FR",
+    accent: "#25b981"
+  }
+];
+
 const ALLOWED_ORIGINS = [
   "https://simplefrancais.getcourse.ru",
   "https://getcourse-last-lesson-mvp.onrender.com",
@@ -377,6 +410,7 @@ function buildDashboard(userKey, user = emptyUserRecord()) {
       percent: totalLessons ? Math.min(100, Math.round((openedLessons / totalLessons) * 100)) : 0
     },
     recommendations: RECOMMENDATIONS_BY_LEVEL[currentLevel] || RECOMMENDATIONS_BY_LEVEL.A1,
+    news: NEWS_ITEMS,
     catalog: allCourses
   };
 }
@@ -478,6 +512,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === "/api/catalog") {
       sendJson(res, 200, { ok: true, courses: Object.values(COURSE_CATALOG), levels: LEVELS }, origin);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/news") {
+      sendJson(res, 200, { ok: true, news: NEWS_ITEMS }, origin);
       return;
     }
 
