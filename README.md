@@ -6,7 +6,7 @@
 
 - `server.js` - маленький Node.js API без внешних зависимостей.
 - `snippets/lesson-tracker.js` - JS для страниц уроков тестового курса.
-- `snippets/home-widget-getcourse.js` - JS для тестовой главной страницы GetCourse.
+- `snippets/home-widget-getcourse.js` - JS для новой dashboard-страницы GetCourse.
 - `public/index.html` - локальная тестовая главная.
 - `data/last-activity.json` - локальное хранилище появится автоматически после первого запуска.
 
@@ -20,17 +20,21 @@ node server.js
 
 ## API
 
-### Сохранить последний урок
+### Сохранить событие урока
 
-`POST /api/last-lesson`
+`POST /api/track`
 
 ```json
 {
   "user_id": "487514661",
   "email": "student@example.com",
+  "event": "opened",
+  "lesson_id": "343702614",
   "lesson_url": "https://simplefrancais.getcourse.ru/pl/teach/control/lesson/view?id=343702614&editMode=0",
   "lesson_title": "Название урока",
-  "training_title": "Фонетика и чтение A1-A2+",
+  "course_id": "phonetics-50",
+  "training_title": "Фонетика 50 миниуроков",
+  "level": "A1-A2",
   "timestamp": "2026-05-31T00:00:00.000Z"
 }
 ```
@@ -39,18 +43,42 @@ node server.js
 
 `GET /api/last-lesson?user_key=487514661`
 
+### Получить dashboard
+
+`GET /api/dashboard?user_key=487514661`
+
+### Получить каталог курсов
+
+`GET /api/catalog`
+
 ## Как вставить на урок тестового курса
 
-В GetCourse на страницах уроков спецкурса "Фонетика и чтение A1-A2+" вставить код из `snippets/lesson-tracker.js`.
+В GetCourse на страницах уроков вставить код из `snippets/lesson-tracker.js`.
 
-Для локального теста `API_BASE` стоит `http://localhost:8787`. Для реального запуска его нужно заменить на HTTPS-адрес внешнего сервера.
+Сейчас трекер знает 5 тестовых курсов:
+
+- `french-a1-plus`
+- `french-a2-1`
+- `phonetics-50`
+- `plus-que-parfait-marathon`
+- `articles-marathon`
+
+Если GetCourse не даёт определить курс автоматически, перед трекером можно добавить:
+
+```html
+<script>
+window.GC_COURSE_ID = "phonetics-50";
+window.GC_TRAINING_TITLE = "Фонетика 50 миниуроков";
+window.GC_LEVEL = "A1-A2";
+</script>
+```
 
 ## Как вставить на тестовую главную
 
 1. Добавить блок/контейнер:
 
 ```html
-<div id="gc-continue-learning"></div>
+<div id="sf-dashboard"></div>
 ```
 
 2. Ниже подключить код из `snippets/home-widget-getcourse.js`.
@@ -61,7 +89,7 @@ node server.js
 2. Открываем DevTools Console.
 3. Ищем сообщение `[GC Last Lesson] Диагностика страницы урока`.
 4. Проверяем, нашлись ли `user_id` или `email`, `lesson_url`, `lesson_title`, `training_title`.
-5. Если данные сохранились, тестовая главная должна показать "Продолжить обучение".
+5. Если данные сохранились, dashboard должен показать "Продолжить обучение", recent courses и прогресс.
 
 ## Важно для продакшена
 
