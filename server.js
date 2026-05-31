@@ -86,6 +86,31 @@ const LEVELS = [
   { level: "B2-C1", title: "Продвинутый", total_lessons: 0, total_cycles: 0, accent: "#ff8b3d" }
 ];
 
+const RECOMMENDATIONS_BY_LEVEL = {
+  A1: [
+    { title: "Фонетика", subtitle: "Произношение, интонация, ритм", level: "A1-A2", type: "practice", total_lessons: 50, url: COURSE_CATALOG["phonetics-50"].url, accent: "#7c55ff", icon: "FR" },
+    { title: "Чтение", subtitle: "Тексты, диалоги, практика чтения", level: "A1", type: "practice", total_lessons: 15, url: "#", accent: "#25b981", icon: "A1" },
+    { title: "101 фраза", subtitle: "Фразы для путешествий", level: "A1", type: "practice", total_lessons: 10, url: "#", accent: "#4d8cff", icon: "101" },
+    { title: "Диктанты A1", subtitle: "Тренировка аудирования", level: "A1", type: "practice", total_lessons: 20, url: "#", accent: "#ff8b3d", icon: "D" },
+    { title: "Неправильные глаголы", subtitle: "Таблицы и упражнения", level: "A1-B1", type: "practice", total_lessons: 12, url: "#", accent: "#25b981", icon: "V" }
+  ],
+  A2: [
+    { title: "Фонетика", subtitle: "Закрепление произношения", level: "A1-A2", type: "practice", total_lessons: 50, url: COURSE_CATALOG["phonetics-50"].url, accent: "#7c55ff", icon: "FR" },
+    { title: "Plus-que-parfait", subtitle: "Тематический марафон", level: "A2-B1", type: "marathon", total_lessons: 18, url: COURSE_CATALOG["plus-que-parfait-marathon"].url, accent: "#ff8b3d", icon: "PQ" },
+    { title: "Диктанты A2", subtitle: "Аудирование и письмо", level: "A2", type: "practice", total_lessons: 20, url: "#", accent: "#4d8cff", icon: "D" },
+    { title: "Артикли", subtitle: "Системное закрепление", level: "A1-B1", type: "marathon", total_lessons: 30, url: COURSE_CATALOG["articles-marathon"].url, accent: "#25b981", icon: "AR" }
+  ],
+  B1: [
+    { title: "Артикли", subtitle: "Тонкие случаи употребления", level: "A1-B1", type: "marathon", total_lessons: 30, url: COURSE_CATALOG["articles-marathon"].url, accent: "#25b981", icon: "AR" },
+    { title: "Lexicum et parole", subtitle: "Лексика и речь", level: "B1", type: "practice", total_lessons: 24, url: "#", accent: "#8d62ff", icon: "B1" },
+    { title: "Диктанты B1", subtitle: "Продвинутое аудирование", level: "B1", type: "practice", total_lessons: 20, url: "#", accent: "#4d8cff", icon: "D" }
+  ],
+  "B2-C1": [
+    { title: "DELF / DALF", subtitle: "Подготовка к экзаменам", level: "B2-C1", type: "exam", total_lessons: 0, url: "#", accent: "#ff8b3d", icon: "EX" },
+    { title: "Разговорный клуб", subtitle: "Практика свободной речи", level: "B2-C1", type: "practice", total_lessons: 0, url: "#", accent: "#8d62ff", icon: "B2" }
+  ]
+};
+
 const ALLOWED_ORIGINS = [
   "https://simplefrancais.getcourse.ru",
   "https://getcourse-last-lesson-mvp.onrender.com",
@@ -304,7 +329,7 @@ function applyActivity(store, activity) {
 function summarizeLevels(user) {
   return LEVELS.map((level) => {
     const stats = Object.values(user.course_stats).filter((course) => {
-      return course.level === level.level || course.level.startsWith(`${level.level}-`) || course.level.endsWith(`-${level.level}`);
+      return course.type === "main" && course.level === level.level;
     });
     const openedLessons = stats.reduce((sum, course) => sum + course.opened_lessons, 0);
     const totalLessons = level.total_lessons || stats.reduce((sum, course) => sum + course.total_lessons, 0);
@@ -318,8 +343,21 @@ function summarizeLevels(user) {
   });
 }
 
+function getCurrentLevel(user) {
+  const mainLevels = Object.values(user.course_stats)
+    .filter((course) => course.type === "main" && course.opened_lessons > 0)
+    .sort((a, b) => b.opened_lessons - a.opened_lessons);
+
+  if (mainLevels[0]?.level) {
+    return mainLevels[0].level;
+  }
+
+  return user.last_activity?.level?.split("-")[0] || "A1";
+}
+
 function buildDashboard(userKey, user = emptyUserRecord()) {
   const allCourses = Object.values(COURSE_CATALOG);
+  const currentLevel = getCurrentLevel(user);
   const recentCourses = user.recent_courses
     .map((courseId) => user.course_stats[courseId] || buildCourseStats(courseId))
     .filter(Boolean);
@@ -332,21 +370,13 @@ function buildDashboard(userKey, user = emptyUserRecord()) {
     recent_courses: recentCourses,
     course_stats: user.course_stats,
     levels: summarizeLevels(user),
+    current_level: currentLevel,
     platform_progress: {
       total_lessons: totalLessons,
       opened_lessons: openedLessons,
       percent: totalLessons ? Math.min(100, Math.round((openedLessons / totalLessons) * 100)) : 0
     },
-    recommendations: allCourses.slice(2).map((course) => ({
-      course_id: course.course_id,
-      title: course.title,
-      level: course.level,
-      type: course.type,
-      total_lessons: course.total_lessons,
-      url: course.url,
-      accent: course.accent,
-      icon: course.icon
-    })),
+    recommendations: RECOMMENDATIONS_BY_LEVEL[currentLevel] || RECOMMENDATIONS_BY_LEVEL.A1,
     catalog: allCourses
   };
 }

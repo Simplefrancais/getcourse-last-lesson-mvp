@@ -30,23 +30,25 @@
     .sf-actions { display:flex; align-items:center; gap:12px; }
     .sf-primary { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 24px; border:0; border-radius:8px; background:#5b4eea; color:#fff !important; text-decoration:none !important; font-weight:850; cursor:pointer; }
     .sf-play { width:46px; height:46px; border-radius:999px; border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.08); color:#fff !important; display:inline-flex; align-items:center; justify-content:center; text-decoration:none !important; font-weight:900; }
-    .sf-recent { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .sf-recent { display:flex; gap:14px; overflow-x:auto; padding:0 0 4px; scroll-snap-type:x proximity; }
     .sf-recent-card, .sf-level-card { min-height:92px; border-radius:8px; padding:16px; background:linear-gradient(135deg,#08172a,#10243a); color:#fff; box-shadow:0 12px 28px rgba(17,34,63,.12); }
-    .sf-recent-card { display:grid; grid-template-columns:56px minmax(0,1fr); gap:14px; align-items:center; }
+    .sf-recent-card { display:grid; grid-template-columns:56px minmax(0,1fr); gap:14px; align-items:center; flex:0 0 min(360px, 86vw); scroll-snap-align:start; }
     .sf-icon { width:50px; height:50px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:var(--accent,#75d56f); font-weight:900; font-size:18px; }
     .sf-recent-card h3, .sf-level-card h3 { margin:0 0 5px; color:#fff; font-size:16px; line-height:1.2; }
     .sf-recent-card p, .sf-level-card p { margin:0 0 10px; color:rgba(255,255,255,.72); font-size:13px; }
     .sf-mini-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:10px; align-items:center; }
     .sf-mini-percent { color:#fff; font-weight:850; text-align:right; font-size:13px; }
+    .sf-path-section { padding:18px; border:1px solid #dbe3ef; border-radius:8px; background:#fff; box-shadow:0 14px 35px rgba(17,34,63,.07); }
+    .sf-path-section .sf-heading h2 { font-size:23px; }
     .sf-level-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
-    .sf-level-card { min-height:170px; position:relative; overflow:hidden; }
-    .sf-level-card strong { display:block; color:var(--accent,#75d56f); font-size:31px; line-height:1; margin-bottom:6px; }
+    .sf-level-card { min-height:205px; position:relative; overflow:hidden; }
+    .sf-level-card strong { display:block; color:var(--accent,#75d56f); font-size:36px; line-height:1; margin-bottom:8px; }
     .sf-circle { position:absolute; right:18px; top:48px; width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:conic-gradient(var(--accent,#75d56f) calc(var(--value,0) * 1%), rgba(255,255,255,.14) 0); color:#fff; font-weight:900; }
     .sf-circle:before { content:""; position:absolute; inset:7px; border-radius:inherit; background:#10243a; }
     .sf-circle span { position:relative; z-index:1; font-size:14px; }
     .sf-open { position:absolute; right:14px; bottom:14px; min-height:34px; padding:0 18px; border:1px solid rgba(255,255,255,.18); border-radius:8px; color:#fff !important; text-decoration:none !important; display:inline-flex; align-items:center; font-size:13px; font-weight:800; }
     .sf-recs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
-    .sf-rec { min-height:148px; border:1px solid var(--sf-line); border-radius:8px; background:#fff; padding:14px; box-shadow:0 10px 25px rgba(17,34,63,.06); display:flex; flex-direction:column; justify-content:space-between; }
+    .sf-rec { min-height:158px; border:1px solid var(--sf-line); border-radius:8px; background:#fff; padding:14px; box-shadow:0 10px 25px rgba(17,34,63,.06); display:flex; flex-direction:column; justify-content:space-between; }
     .sf-rec h3 { margin:0 0 8px; font-size:15px; line-height:1.22; color:var(--sf-ink); }
     .sf-rec p { margin:0; color:var(--sf-muted); font-size:12px; }
     .sf-tag { display:inline-flex; width:max-content; min-height:20px; align-items:center; padding:0 8px; border-radius:6px; background:#eaf7ef; color:#17744d; font-size:11px; font-weight:900; }
@@ -60,13 +62,15 @@
     .sf-news:last-child { margin-bottom:0; }
     .sf-news b { display:block; font-size:13px; color:var(--sf-ink); }
     .sf-news small { color:var(--sf-muted); }
-    .sf-action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-    .sf-action { min-height:54px; border:1px solid #e0e7f2; border-radius:8px; background:#fff; color:var(--sf-ink) !important; text-decoration:none !important; display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:850; }
-    .sf-catalog-row { display:flex; justify-content:space-between; align-items:center; min-height:34px; border-bottom:1px solid #edf1f7; font-size:13px; }
+    .sf-action-grid { display:grid; grid-template-columns:1fr; gap:9px; }
+    .sf-action { min-height:42px; border:1px solid #e0e7f2; border-radius:8px; background:#fff; color:var(--sf-ink) !important; text-decoration:none !important; display:flex; align-items:center; justify-content:flex-start; padding:0 12px; text-align:left; font-size:13px; font-weight:850; }
+    .sf-catalog-box { opacity:.82; }
+    .sf-catalog-box h2 { font-size:15px; }
+    .sf-catalog-row { display:flex; justify-content:space-between; align-items:center; min-height:30px; border-bottom:1px solid #edf1f7; font-size:12px; color:var(--sf-muted); }
     .sf-catalog-row:last-child { border-bottom:0; }
     .sf-empty { border:1px solid var(--sf-line); border-radius:8px; background:#fff; padding:22px; }
     @media (max-width: 1050px) { .sf-shell { grid-template-columns:1fr; } .sf-search { width:100%; } .sf-top { flex-direction:column; } .sf-recs { grid-template-columns:repeat(2,minmax(0,1fr)); } .sf-level-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 680px) { .sf-shell { padding:16px 10px 28px; } .sf-hello h1 { font-size:28px; } .sf-hero-content { padding:22px; } .sf-hero h3 { font-size:24px; } .sf-recent, .sf-recs, .sf-level-grid { grid-template-columns:1fr; } .sf-archive { align-items:flex-start; flex-direction:column; } }
+    @media (max-width: 680px) { .sf-shell { padding:16px 10px 28px; } .sf-hello h1 { font-size:28px; } .sf-hero-content { padding:22px; } .sf-hero h3 { font-size:24px; } .sf-recs, .sf-level-grid { grid-template-columns:1fr; } .sf-archive { align-items:flex-start; flex-direction:column; } }
   `;
   document.head.appendChild(style);
 
@@ -146,15 +150,15 @@
       '</article>';
     }).join("");
 
-    return '<section class="sf-section"><div class="sf-heading"><h2>Мой путь</h2><a class="sf-link" href="#">Подробнее</a></div><div class="sf-level-grid">' + cards + '</div></section>';
+    return '<section class="sf-section sf-path-section"><div class="sf-heading"><h2>Мой путь</h2><a class="sf-link" href="#">Подробнее</a></div><div class="sf-level-grid">' + cards + '</div></section>';
   }
 
   function renderRecommendations(items) {
     const cards = items.slice(0, 5).map((item) => {
-      return '<article class="sf-rec"><div><span class="sf-tag">' + escapeHtml(item.level) + '</span><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.type) + '</p></div><p>' + item.total_lessons + ' уроков</p></article>';
+      return '<article class="sf-rec"><div><span class="sf-tag">' + escapeHtml(item.level) + '</span><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.subtitle || item.type) + '</p></div><p>' + (item.total_lessons ? item.total_lessons + ' уроков' : 'Скоро') + '</p></article>';
     }).join("");
 
-    return '<section class="sf-section"><div class="sf-heading"><h2>Для вас сейчас полезно</h2><a class="sf-link" href="#">Смотреть все</a></div><div class="sf-recs">' + cards + '</div></section>';
+    return '<section class="sf-section"><div class="sf-heading"><h2>Для вас сейчас полезно</h2><a class="sf-link" href="#">Подобрать ещё</a></div><div class="sf-recs">' + cards + '</div></section>';
   }
 
   function renderSide(dashboard) {
@@ -169,10 +173,10 @@
         '<div class="sf-news"><div class="sf-icon">' + platform.percent + '%</div><div><b>Прогресс платформы</b><small>' + platform.opened_lessons + ' из ' + platform.total_lessons + ' уроков открыто</small></div></div>' +
         '<div class="sf-news"><div class="sf-icon">100</div><div><b>Цель</b><small>Следующая отметка: 100 уроков</small></div></div>' +
       '</div>' +
-      '<div class="sf-box"><h2>Быстрые действия</h2><div class="sf-action-grid">' +
-        '<a class="sf-action" href="#">Поиск курсов</a><a class="sf-action" href="#">Избранное</a><a class="sf-action" href="#">Марафоны</a><a class="sf-action" href="#">Поддержка</a>' +
+      '<div class="sf-box"><h2>Полезное</h2><div class="sf-action-grid">' +
+        '<a class="sf-action" href="#">Задать вопрос</a><a class="sf-action" href="#">Навигатор по платформе</a><a class="sf-action" href="#">Предложить тему курса</a>' +
       '</div></div>' +
-      '<div class="sf-box"><h2>Полный каталог</h2>' +
+      '<div class="sf-box sf-catalog-box"><h2>Каталог</h2>' +
         '<div class="sf-catalog-row"><span>Основные курсы</span><b>2</b></div>' +
         '<div class="sf-catalog-row"><span>Практика и закрепление</span><b>3</b></div>' +
         '<div class="sf-catalog-row"><span>Марафоны</span><b>2</b></div>' +
@@ -190,8 +194,8 @@
         '<header class="sf-top"><div class="sf-hello"><h1>Bonjour, Julie!</h1><p>Продолжайте учиться и достигайте новых целей</p></div><div class="sf-search">Поиск курсов, уроков, тем...</div></header>' +
         renderHero(last, lastStat) +
         renderRecent(dashboard.recent_courses || []) +
-        renderLevels(dashboard.levels || []) +
         renderRecommendations(dashboard.recommendations || []) +
+        renderLevels(dashboard.levels || []) +
         '<section class="sf-section"><div class="sf-archive"><div><h3>Архив прошлых версий курсов (2017-2023)</h3><p>Старые версии курсов будут добавлены позже.</p></div><a class="sf-secondary" href="#">Перейти в архив</a></div></section>' +
       '</main>' +
       renderSide(dashboard) +
