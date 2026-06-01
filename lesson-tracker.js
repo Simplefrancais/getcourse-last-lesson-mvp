@@ -134,6 +134,10 @@
     ]) || "Урок";
   }
 
+  function isLessonPage() {
+    return location.pathname.includes("/pl/teach/control/lesson/view");
+  }
+
   function detectCourseFromPage(catalog) {
     const byStreamId = catalog.reduce((index, course) => {
       if (course.stream_id) index[course.stream_id] = course;
@@ -204,6 +208,10 @@
   }
 
   async function sendActivity() {
+    if (!isLessonPage()) {
+      return;
+    }
+
     const catalog = await loadCatalog();
     const user = getCurrentUser();
     const course = getCourseMeta(catalog);

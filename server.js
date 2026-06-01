@@ -263,6 +263,15 @@ function parseLessonId(payload) {
   }
 }
 
+function isGetCourseLessonUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return url.pathname.includes("/pl/teach/control/lesson/view");
+  } catch {
+    return false;
+  }
+}
+
 function buildCourseStats(courseId, openedLessons = [], completedLessons = []) {
   const course = COURSE_CATALOG[courseId] || {
     course_id: courseId,
@@ -406,6 +415,10 @@ function sanitizeActivity(payload) {
 
   if (!lessonUrl) {
     return { error: "Missing lesson_url" };
+  }
+
+  if (!isGetCourseLessonUrl(lessonUrl)) {
+    return { error: "Not a lesson page" };
   }
 
   if (Number.isNaN(timestamp.getTime())) {
