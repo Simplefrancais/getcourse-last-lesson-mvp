@@ -157,7 +157,7 @@ function levelMatches(courseLevel, currentLevel) {
 
 function findCourse(payload) {
   const explicitId = normalizeId(payload.course_id);
-  if (explicitId && COURSE_CATALOG[explicitId]) {
+  if (explicitId && explicitId !== "unknown-course" && COURSE_CATALOG[explicitId]) {
     return COURSE_CATALOG[explicitId];
   }
 
@@ -266,8 +266,9 @@ function sanitizeActivity(payload) {
   const lessonUrl = String(payload.lesson_url || "").trim();
   const lessonTitle = String(payload.lesson_title || "").trim();
   const course = findCourse(payload);
-  const courseId = normalizeId(payload.course_id || course?.course_id || "unknown-course");
-  const courseTitle = String(payload.course_title || payload.training_title || course?.title || "Курс").trim();
+  const payloadCourseId = normalizeId(payload.course_id);
+  const courseId = course?.course_id || (payloadCourseId && payloadCourseId !== "unknown-course" ? payloadCourseId : "unknown-course");
+  const courseTitle = String(course?.title || payload.course_title || payload.training_title || "Курс").trim();
   const timestamp = payload.timestamp ? new Date(payload.timestamp) : new Date();
 
   if (!userKey) {
@@ -292,10 +293,10 @@ function sanitizeActivity(payload) {
       lesson_url: lessonUrl,
       lesson_title: lessonTitle || "Последний урок",
       course_id: courseId,
-      level: normalizeId(payload.level || course?.level || ""),
+      level: normalizeId(course?.level || payload.level || ""),
       training_title: courseTitle,
       course_title: courseTitle,
-      course_url: String(payload.course_url || course?.url || "").trim(),
+      course_url: String(course?.url || payload.course_url || "").trim(),
       timestamp: timestamp.toISOString()
     }
   };

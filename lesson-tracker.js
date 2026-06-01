@@ -1,39 +1,43 @@
 (function () {
   const API_BASE = window.GC_LAST_LESSON_API_BASE || "https://getcourse-last-lesson-mvp.onrender.com";
   const DEDUPE_MINUTES = 10;
-
-  const COURSE_CATALOG = {
-    "194833897": {
+  const FALLBACK_COURSES = [
+    {
       course_id: "french-a1-plus",
-      training_title: "A1+ Французский с нуля",
+      title: "A1+ Французский с нуля",
       level: "A1",
-      course_url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/194833897"
+      url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/194833897",
+      stream_id: "194833897"
     },
-    "317304947": {
+    {
       course_id: "french-a2-1",
-      training_title: "A2.1 Французский A2.1",
+      title: "A2.1 Французский A2.1",
       level: "A2",
-      course_url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/317304947"
+      url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/317304947",
+      stream_id: "317304947"
     },
-    "934655104": {
+    {
       course_id: "phonetics-50",
-      training_title: "Фонетика 50 миниуроков",
+      title: "Фонетика 50 миниуроков",
       level: "A1-A2",
-      course_url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/934655104"
+      url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/934655104",
+      stream_id: "934655104"
     },
-    "591520903": {
+    {
       course_id: "plus-que-parfait-marathon",
-      training_title: "Марафон по plus-que-parfait",
+      title: "Марафон Plus-que-parfait",
       level: "A2-B1",
-      course_url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/591520903"
+      url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/591520903",
+      stream_id: "591520903"
     },
-    "386812694": {
+    {
       course_id: "articles-marathon",
-      training_title: "Марафон по артиклям",
+      title: "Марафон по артиклям",
       level: "A1-B1",
-      course_url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/386812694"
+      url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/386812694",
+      stream_id: "386812694"
     }
-  };
+  ];
 
   function text(selector) {
     const element = document.querySelector(selector);
@@ -42,6 +46,35 @@
 
   function firstValue(values) {
     return values.find((value) => String(value || "").trim());
+  }
+
+  function normalizeCourse(course) {
+    return {
+      course_id: course.course_id || "",
+      training_title: course.training_title || course.title || "",
+      level: course.level || "",
+      course_url: course.course_url || course.url || "",
+      stream_id: course.stream_id || ""
+    };
+  }
+
+  function getStreamId(url) {
+    const match = String(url || "").match(/stream\/view\/id\/(\d+)/) || String(url || "").match(/[?&]id=(\d+)/);
+    return match ? match[1] : "";
+  }
+
+  async function loadCatalog() {
+    try {
+      const response = await fetch(`${API_BASE}/api/catalog`, { method: "GET" });
+      const data = await response.json();
+      if (data.ok && Array.isArray(data.courses)) {
+        return data.courses.map(normalizeCourse);
+      }
+    } catch (error) {
+      console.info("[GC Last Lesson] Каталог не загрузился, используем резервный список.", error);
+    }
+
+    return FALLBACK_COURSES.map(normalizeCourse);
   }
 
   function getCurrentUser() {
@@ -83,14 +116,19 @@
     ]) || "Урок";
   }
 
-  function detectCourseFromPage() {
+  function detectCourseFromPage(catalog) {
+    const byStreamId = catalog.reduce((index, course) => {
+      if (course.stream_id) index[course.stream_id] = course;
+      return index;
+    }, {});
     const links = Array.from(document.querySelectorAll("a[href*='/teach/control/stream/view']"));
+
     for (const link of links) {
-      const match = link.href.match(/stream\/view\/id\/(\d+)/) || link.href.match(/[?&]id=(\d+)/);
-      if (match && COURSE_CATALOG[match[1]]) {
-        return COURSE_CATALOG[match[1]];
+      const streamId = getStreamId(link.href);
+      if (streamId && byStreamId[streamId]) {
+        return byStreamId[streamId];
       }
-      if (match) {
+      if (streamId) {
         return {
           course_id: "",
           training_title: link.textContent.trim().replace(/\s+/g, " ") || "",
@@ -101,11 +139,12 @@
     }
 
     const pageText = document.body ? document.body.textContent : "";
-    return Object.values(COURSE_CATALOG).find((course) => pageText.includes(course.training_title)) || null;
+    const normalizedPageText = pageText.toLowerCase();
+    return catalog.find((course) => course.training_title && normalizedPageText.includes(course.training_title.toLowerCase())) || null;
   }
 
-  function getCourseMeta() {
-    const detected = detectCourseFromPage() || {};
+  function getCourseMeta(catalog) {
+    const detected = detectCourseFromPage(catalog) || {};
     return {
       course_id: firstValue([window.GC_COURSE_ID, detected.course_id]) || "unknown-course",
       training_title: firstValue([window.GC_TRAINING_TITLE, detected.training_title, text(".stream-title")]) || "Курс",
@@ -145,8 +184,9 @@
   }
 
   async function sendActivity() {
+    const catalog = await loadCatalog();
     const user = getCurrentUser();
-    const course = getCourseMeta();
+    const course = getCourseMeta(catalog);
     const payload = {
       user_id: String(user.user_id || "").trim(),
       email: String(user.email || "").trim(),
