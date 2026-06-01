@@ -4,13 +4,22 @@
 
 ## Что входит
 
-- `server.js` - маленький Node.js API без внешних зависимостей.
+- `server.js` - маленький Node.js API. В продакшене сохраняет данные в PostgreSQL, локально может работать через файл.
 - `config/course-catalog.json` - каталог курсов, экспортированный из таблицы "Все курсы 2026.xlsx".
 - `snippets/lesson-tracker.js` - JS для страниц уроков тестового курса.
 - `snippets/home-widget-getcourse.js` - JS для новой dashboard-страницы GetCourse.
 - `scripts/export-course-catalog.py` - локальный скрипт для пересборки каталога из Excel.
 - `public/index.html` - локальная тестовая главная.
 - `data/last-activity.json` - локальное хранилище появится автоматически после первого запуска.
+
+## Хранение данных
+
+Если задана переменная окружения `DATABASE_URL`, сервер использует PostgreSQL:
+
+- `user_state` - текущее состояние dashboard по каждому ученику;
+- `activity_events` - история открытий уроков.
+
+Если `DATABASE_URL` не задана, сервер использует локальный файл `data/last-activity.json`. Это удобно для теста, но не подходит для реальных учеников.
 
 ## Запуск локально
 

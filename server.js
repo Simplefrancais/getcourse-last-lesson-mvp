@@ -10,6 +10,10 @@ const HOST = process.env.HOST || "127.0.0.1";
 const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "last-activity.json");
 const PUBLIC_DIR = path.join(__dirname, "public");
+const DATABASE_URL = process.env.DATABASE_URL || "";
+
+let poolPromise = null;
+let databaseReady = false;
 
 function loadCourseCatalog() {
   const catalogPath = path.join(__dirname, "config", "course-catalog.json");
@@ -108,6 +112,57 @@ async function ensureStore() {
   if (!existsSync(DATA_FILE)) {
     await writeFile(DATA_FILE, "{}\n", "utf8");
   }
+}
+
+async function getPool() {
+  if (!DATABASE_URL) {
+    return null;
+  }
+
+  if (!poolPromise) {
+    poolPromise = import("pg").then((pg) => {
+      const Pool = pg.Pool || pg.default.Pool;
+      return new Pool({
+        connectionString: DATABASE_URL,
+        ssl: DATABASE_URL.includes("render.com") ? { rejectUnauthorized: false } : undefined
+      });
+    });
+  }
+
+  return poolPromise;
+}
+
+async function ensureDatabase() {
+  const pool = await getPool();
+  if (!pool || databaseReady) {
+    return pool;
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_state (
+      user_key TEXT PRIMARY KEY,
+      record JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activity_events (
+      id BIGSERIAL PRIMARY KEY,
+      user_key TEXT NOT NULL,
+      event TEXT NOT NULL,
+      course_id TEXT NOT NULL,
+      lesson_id TEXT,
+      activity JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS activity_events_user_created_idx
+      ON activity_events (user_key, created_at DESC)
+  `);
+
+  databaseReady = true;
+  return pool;
 }
 
 function emptyUserRecord() {
@@ -243,14 +298,63 @@ function migrateStore(store) {
 }
 
 async function readStore() {
+  const pool = await ensureDatabase();
+  if (pool) {
+    const result = await pool.query("SELECT user_key, record FROM user_state");
+    return {
+      users: result.rows.reduce((users, row) => {
+        users[row.user_key] = row.record;
+        return users;
+      }, {})
+    };
+  }
+
   await ensureStore();
   const raw = await readFile(DATA_FILE, "utf8");
   return migrateStore(JSON.parse(raw || "{}"));
 }
 
 async function writeStore(store) {
+  const pool = await ensureDatabase();
+  if (pool) {
+    for (const [userKey, record] of Object.entries(store.users || {})) {
+      await pool.query(
+        `
+          INSERT INTO user_state (user_key, record, updated_at)
+          VALUES ($1, $2::jsonb, NOW())
+          ON CONFLICT (user_key)
+          DO UPDATE SET record = EXCLUDED.record, updated_at = NOW()
+        `,
+        [userKey, JSON.stringify(record)]
+      );
+    }
+    return;
+  }
+
   await ensureStore();
   await writeFile(DATA_FILE, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+}
+
+async function recordActivityEvent(activity) {
+  const pool = await ensureDatabase();
+  if (!pool) {
+    return;
+  }
+
+  await pool.query(
+    `
+      INSERT INTO activity_events (user_key, event, course_id, lesson_id, activity, created_at)
+      VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+    `,
+    [
+      activity.user_key,
+      activity.event,
+      activity.course_id || "unknown-course",
+      activity.lesson_id || "",
+      JSON.stringify(activity),
+      activity.timestamp
+    ]
+  );
 }
 
 function sendJson(res, status, data, origin) {
@@ -488,6 +592,7 @@ const server = http.createServer(async (req, res) => {
       const store = await readStore();
       applyActivity(store, result.activity);
       await writeStore(store);
+      await recordActivityEvent(result.activity);
 
       sendJson(res, 200, { ok: true, activity: result.activity }, origin);
       return;
