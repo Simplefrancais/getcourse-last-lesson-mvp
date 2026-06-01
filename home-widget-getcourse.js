@@ -48,9 +48,15 @@
     .sf-circle span { position:relative; z-index:1; font-size:14px; }
     .sf-open { position:absolute; right:14px; bottom:14px; min-height:34px; padding:0 18px; border:1px solid rgba(255,255,255,.18); border-radius:8px; color:#fff !important; text-decoration:none !important; display:inline-flex; align-items:center; font-size:13px; font-weight:800; }
     .sf-recs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
-    .sf-rec { min-height:158px; border:1px solid var(--sf-line); border-radius:8px; background:#fff; padding:14px; box-shadow:0 10px 25px rgba(17,34,63,.06); display:flex; flex-direction:column; justify-content:space-between; }
+    .sf-rec { min-height:158px; border:1px solid var(--sf-line); border-top:3px solid var(--accent,#5b5ff0); border-radius:8px; background:#fff; padding:13px 14px 14px; box-shadow:0 10px 25px rgba(17,34,63,.06); display:flex; flex-direction:column; justify-content:space-between; color:var(--sf-ink) !important; text-decoration:none !important; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease; }
+    .sf-rec:hover { transform:translateY(-3px); border-color:#bfcdf5; border-top-color:var(--accent,#5b5ff0); background:#fbfcff; box-shadow:0 16px 34px rgba(17,34,63,.12); }
+    .sf-rec-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .sf-rec-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#eef3ff; color:var(--accent,#5b5ff0); font-size:12px; font-weight:900; }
     .sf-rec h3 { margin:0 0 8px; font-size:15px; line-height:1.22; color:var(--sf-ink); }
     .sf-rec p { margin:0; color:var(--sf-muted); font-size:12px; }
+    .sf-rec-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .sf-rec-arrow { width:34px; height:34px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#eef3ff; color:#344bd8; font-size:18px; font-weight:900; transition:transform .18s ease, background .18s ease; }
+    .sf-rec:hover .sf-rec-arrow { transform:translateX(2px); background:#dfe7ff; }
     .sf-tag { display:inline-flex; width:max-content; min-height:20px; align-items:center; padding:0 8px; border-radius:6px; background:#eaf7ef; color:#17744d; font-size:11px; font-weight:900; }
     .sf-archive { min-height:74px; border:1px solid var(--sf-line); border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; }
     .sf-archive h3 { margin:0 0 4px; font-size:16px; }
@@ -62,9 +68,11 @@
     .sf-news:last-child { margin-bottom:0; }
     .sf-news b { display:block; font-size:13px; color:var(--sf-ink); }
     .sf-news small { color:var(--sf-muted); }
+    .sf-news-time { display:block; margin-bottom:3px; color:#344bd8; font-size:11px; font-weight:900; text-transform:uppercase; }
     .sf-action-grid { display:grid; grid-template-columns:1fr; gap:9px; }
     .sf-action { min-height:42px; border:1px solid #e0e7f2; border-radius:8px; background:#fff; color:var(--sf-ink) !important; text-decoration:none !important; display:flex; align-items:center; justify-content:flex-start; padding:0 12px; text-align:left; font-size:13px; font-weight:850; }
-    .sf-catalog-box { opacity:.82; }
+    .sf-catalog-box { opacity:.58; box-shadow:none; background:rgba(255,255,255,.58); border-style:dashed; }
+    .sf-catalog-box:hover { opacity:.9; }
     .sf-catalog-box h2 { font-size:15px; }
     .sf-catalog-row { display:flex; justify-content:space-between; align-items:center; min-height:30px; border-bottom:1px solid #edf1f7; font-size:12px; color:var(--sf-muted); }
     .sf-catalog-row:last-child { border-bottom:0; }
@@ -108,7 +116,12 @@
 
   function renderHero(activity, stat) {
     if (!activity) {
-      return '<section class="sf-section"><div class="sf-empty"><h2>Продолжить обучение</h2><p>Пока нет открытых уроков.</p><p style="margin-top:16px"><a class="sf-primary" href="' + escapeHtml(window.GC_CHOOSE_LEVEL_URL) + '">Выбрать уровень</a></p></div></section>';
+      return '<section class="sf-section">' +
+        '<div class="sf-heading"><h2>Продолжить обучение</h2></div>' +
+        '<article class="sf-hero"><div class="sf-hero-content">' +
+          '<div><span class="sf-pill">FR</span><h3>Выберите свой уровень</h3><p>Когда вы откроете первый урок, здесь появится продолжение обучения.</p></div>' +
+          '<div class="sf-actions"><a class="sf-primary" href="' + escapeHtml(window.GC_CHOOSE_LEVEL_URL) + '">Выбрать уровень</a></div>' +
+        '</div></article></section>';
     }
 
     const percent = stat ? stat.lesson_progress_percent : 0;
@@ -129,7 +142,7 @@
   }
 
   function renderRecent(courses) {
-    const items = (courses || []).slice(0, 3).map((course) => {
+    const items = (courses || []).slice(0, 5).map((course) => {
       return '<article class="sf-recent-card">' +
         '<div class="sf-icon" style="--accent:' + escapeHtml(course.accent) + '">' + escapeHtml(course.icon || course.level || "FR") + '</div>' +
         '<div><h3>' + escapeHtml(course.title) + '</h3><p>' + escapeHtml(course.level || "Курс") + '</p>' +
@@ -155,7 +168,7 @@
 
   function renderRecommendations(items) {
     const cards = items.slice(0, 5).map((item) => {
-      return '<article class="sf-rec"><div><span class="sf-tag">' + escapeHtml(item.level) + '</span><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.subtitle || item.type) + '</p></div><p>' + (item.total_lessons ? item.total_lessons + ' уроков' : 'Скоро') + '</p></article>';
+      return '<a class="sf-rec" style="--accent:' + escapeHtml(item.accent || "#5b5ff0") + '" href="' + escapeHtml(item.url || "#") + '"><div><div class="sf-rec-head"><span class="sf-tag">' + escapeHtml(item.level) + '</span><span class="sf-rec-icon">' + escapeHtml(item.icon || item.level || "FR") + '</span></div><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.subtitle || item.type) + '</p></div><div class="sf-rec-foot"><p>' + (item.total_lessons ? item.total_lessons + ' уроков' : 'Скоро') + '</p><span class="sf-rec-arrow">›</span></div></a>';
     }).join("");
 
     return '<section class="sf-section"><div class="sf-heading"><h2>Для вас сейчас полезно</h2><a class="sf-link" href="#">Подобрать ещё</a></div><div class="sf-recs">' + cards + '</div></section>';
@@ -163,11 +176,16 @@
 
   function renderSide(dashboard) {
     const platform = dashboard.platform_progress || {};
+    const news = (dashboard.news || []).slice(0, 4).map((item) => {
+      return '<a class="sf-news" href="' + escapeHtml(item.url || "#") + '" style="text-decoration:none; color:inherit"><div class="sf-icon" style="--accent:' + escapeHtml(item.accent || "#75d56f") + '">' + escapeHtml(item.icon || item.level || "FR") + '</div><div><span class="sf-news-time">' + escapeHtml(item.time_label || item.date || "") + '</span><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(item.subtitle || item.level || "") + '</small></div></a>';
+    }).join("");
+    const catalogRows = (dashboard.catalog_summary || []).slice(0, 5).map((item) => {
+      return '<div class="sf-catalog-row"><span>' + escapeHtml(item.title) + '</span><b>' + escapeHtml(item.count) + '</b></div>';
+    }).join("");
+
     return '<aside class="sf-side">' +
       '<div class="sf-box"><h2>Что нового?</h2>' +
-        '<div class="sf-news"><div class="sf-icon">A2</div><div><b>Новый диктант</b><small>Диктант A2 N15</small></div></div>' +
-        '<div class="sf-news"><div class="sf-icon">PQ</div><div><b>Новый марафон</b><small>Plus-que-parfait</small></div></div>' +
-        '<div class="sf-news"><div class="sf-icon">FR</div><div><b>Новый урок</b><small>Отрицательные местоимения</small></div></div>' +
+        news +
       '</div>' +
       '<div class="sf-box"><h2>Мои достижения</h2>' +
         '<div class="sf-news"><div class="sf-icon">' + platform.percent + '%</div><div><b>Прогресс платформы</b><small>' + platform.opened_lessons + ' из ' + platform.total_lessons + ' уроков открыто</small></div></div>' +
@@ -177,10 +195,7 @@
         '<a class="sf-action" href="#">Задать вопрос</a><a class="sf-action" href="#">Навигатор по платформе</a><a class="sf-action" href="#">Предложить тему курса</a>' +
       '</div></div>' +
       '<div class="sf-box sf-catalog-box"><h2>Каталог</h2>' +
-        '<div class="sf-catalog-row"><span>Основные курсы</span><b>2</b></div>' +
-        '<div class="sf-catalog-row"><span>Практика и закрепление</span><b>3</b></div>' +
-        '<div class="sf-catalog-row"><span>Марафоны</span><b>2</b></div>' +
-        '<div class="sf-catalog-row"><span>Архив курсов</span><b>позже</b></div>' +
+        catalogRows +
       '</div>' +
     '</aside>';
   }

@@ -1,6 +1,6 @@
 import http from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,68 +11,34 @@ const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "last-activity.json");
 const PUBLIC_DIR = path.join(__dirname, "public");
 
-const COURSE_CATALOG = {
-  "french-a1-plus": {
-    course_id: "french-a1-plus",
-    title: "A1+ Французский с нуля",
-    url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/194833897",
-    stream_id: "194833897",
-    type: "main",
-    level: "A1",
-    total_cycles: 24,
-    total_lessons: 440,
-    accent: "#75d56f",
-    icon: "A1"
-  },
-  "french-a2-1": {
-    course_id: "french-a2-1",
-    title: "A2.1 Французский A2.1",
-    url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/317304947",
-    stream_id: "317304947",
-    type: "main",
-    level: "A2",
-    total_cycles: 12,
-    total_lessons: 282,
-    accent: "#4d8cff",
-    icon: "A2"
-  },
-  "phonetics-50": {
-    course_id: "phonetics-50",
-    title: "Фонетика 50 миниуроков",
-    url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/934655104",
-    stream_id: "934655104",
-    type: "practice",
-    level: "A1-A2",
-    total_cycles: 0,
-    total_lessons: 50,
-    accent: "#7c55ff",
-    icon: "FR"
-  },
-  "plus-que-parfait-marathon": {
-    course_id: "plus-que-parfait-marathon",
-    title: "Марафон по plus-que-parfait",
-    url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/591520903",
-    stream_id: "591520903",
-    type: "practice",
-    level: "A2-B1",
-    total_cycles: 0,
-    total_lessons: 18,
-    accent: "#ff8b3d",
-    icon: "PQ"
-  },
-  "articles-marathon": {
-    course_id: "articles-marathon",
-    title: "Марафон по артиклям",
-    url: "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/386812694",
-    stream_id: "386812694",
-    type: "practice",
-    level: "A1-B1",
-    total_cycles: 0,
-    total_lessons: 30,
-    accent: "#25b981",
-    icon: "AR"
-  }
-};
+function loadCourseCatalog() {
+  const catalogPath = path.join(__dirname, "config", "course-catalog.json");
+  const raw = JSON.parse(readFileSync(catalogPath, "utf8"));
+  const courses = raw.courses || [];
+  return courses.reduce((index, course) => {
+    index[course.course_id] = decorateCourse(course);
+    return index;
+  }, {});
+}
+
+function decorateCourse(course) {
+  const accents = {
+    main: "#4d8cff",
+    practice: "#25b981",
+    marathon: "#ff8b3d",
+    exam: "#8d62ff",
+    kids: "#f06292"
+  };
+  return {
+    ...course,
+    total_lessons: Number(course.total_lessons || 0),
+    total_cycles: Number(course.total_cycles || 0),
+    accent: course.accent || accents[course.type] || "#5b5ff0",
+    icon: course.icon || course.level || "FR"
+  };
+}
+
+const COURSE_CATALOG = loadCourseCatalog();
 
 const COURSE_BY_STREAM_ID = Object.values(COURSE_CATALOG).reduce((index, course) => {
   index[course.stream_id] = course;
@@ -80,36 +46,11 @@ const COURSE_BY_STREAM_ID = Object.values(COURSE_CATALOG).reduce((index, course)
 }, {});
 
 const LEVELS = [
-  { level: "A1", title: "Начальный", total_lessons: 440, total_cycles: 24, accent: "#75d56f" },
-  { level: "A2", title: "Базовый", total_lessons: 282, total_cycles: 12, accent: "#4d8cff" },
-  { level: "B1", title: "Средний", total_lessons: 0, total_cycles: 0, accent: "#8d62ff" },
-  { level: "B2-C1", title: "Продвинутый", total_lessons: 0, total_cycles: 0, accent: "#ff8b3d" }
+  { level: "A1", title: "Начальный", accent: "#75d56f" },
+  { level: "A2", title: "Базовый", accent: "#4d8cff" },
+  { level: "B1", title: "Средний", accent: "#8d62ff" },
+  { level: "B2-C1", title: "Продвинутый", accent: "#ff8b3d" }
 ];
-
-const RECOMMENDATIONS_BY_LEVEL = {
-  A1: [
-    { title: "Фонетика", subtitle: "Произношение, интонация, ритм", level: "A1-A2", type: "practice", total_lessons: 50, url: COURSE_CATALOG["phonetics-50"].url, accent: "#7c55ff", icon: "FR" },
-    { title: "Чтение", subtitle: "Тексты, диалоги, практика чтения", level: "A1", type: "practice", total_lessons: 15, url: "#", accent: "#25b981", icon: "A1" },
-    { title: "101 фраза", subtitle: "Фразы для путешествий", level: "A1", type: "practice", total_lessons: 10, url: "#", accent: "#4d8cff", icon: "101" },
-    { title: "Диктанты A1", subtitle: "Тренировка аудирования", level: "A1", type: "practice", total_lessons: 20, url: "#", accent: "#ff8b3d", icon: "D" },
-    { title: "Неправильные глаголы", subtitle: "Таблицы и упражнения", level: "A1-B1", type: "practice", total_lessons: 12, url: "#", accent: "#25b981", icon: "V" }
-  ],
-  A2: [
-    { title: "Фонетика", subtitle: "Закрепление произношения", level: "A1-A2", type: "practice", total_lessons: 50, url: COURSE_CATALOG["phonetics-50"].url, accent: "#7c55ff", icon: "FR" },
-    { title: "Plus-que-parfait", subtitle: "Тематический марафон", level: "A2-B1", type: "marathon", total_lessons: 18, url: COURSE_CATALOG["plus-que-parfait-marathon"].url, accent: "#ff8b3d", icon: "PQ" },
-    { title: "Диктанты A2", subtitle: "Аудирование и письмо", level: "A2", type: "practice", total_lessons: 20, url: "#", accent: "#4d8cff", icon: "D" },
-    { title: "Артикли", subtitle: "Системное закрепление", level: "A1-B1", type: "marathon", total_lessons: 30, url: COURSE_CATALOG["articles-marathon"].url, accent: "#25b981", icon: "AR" }
-  ],
-  B1: [
-    { title: "Артикли", subtitle: "Тонкие случаи употребления", level: "A1-B1", type: "marathon", total_lessons: 30, url: COURSE_CATALOG["articles-marathon"].url, accent: "#25b981", icon: "AR" },
-    { title: "Lexicum et parole", subtitle: "Лексика и речь", level: "B1", type: "practice", total_lessons: 24, url: "#", accent: "#8d62ff", icon: "B1" },
-    { title: "Диктанты B1", subtitle: "Продвинутое аудирование", level: "B1", type: "practice", total_lessons: 20, url: "#", accent: "#4d8cff", icon: "D" }
-  ],
-  "B2-C1": [
-    { title: "DELF / DALF", subtitle: "Подготовка к экзаменам", level: "B2-C1", type: "exam", total_lessons: 0, url: "#", accent: "#ff8b3d", icon: "EX" },
-    { title: "Разговорный клуб", subtitle: "Практика свободной речи", level: "B2-C1", type: "practice", total_lessons: 0, url: "#", accent: "#8d62ff", icon: "B2" }
-  ]
-};
 
 const NEWS_ITEMS = [
   {
@@ -191,6 +132,29 @@ function normalizeId(value) {
   return String(value || "").trim();
 }
 
+function isCurrentCourse(course) {
+  return Boolean(course?.active) && course.status !== "archive";
+}
+
+function isDashboardMainCourse(course) {
+  return isCurrentCourse(course) && course.type === "main" && course.show_on_dashboard;
+}
+
+function levelBucket(level) {
+  const normalized = normalizeId(level);
+  if (normalized.startsWith("A1")) return "A1";
+  if (normalized.startsWith("A2")) return "A2";
+  if (normalized.startsWith("B1")) return "B1";
+  if (normalized.startsWith("B2") || normalized.startsWith("C1") || normalized.includes("C1")) return "B2-C1";
+  return normalized;
+}
+
+function levelMatches(courseLevel, currentLevel) {
+  const normalized = normalizeId(courseLevel);
+  const bucket = levelBucket(normalized);
+  return bucket === currentLevel || normalized.includes(currentLevel);
+}
+
 function findCourse(payload) {
   const explicitId = normalizeId(payload.course_id);
   if (explicitId && COURSE_CATALOG[explicitId]) {
@@ -198,7 +162,7 @@ function findCourse(payload) {
   }
 
   const courseUrl = String(payload.course_url || payload.training_url || "").trim();
-  const streamMatch = courseUrl.match(/stream\/view\/id\/(\d+)/);
+  const streamMatch = courseUrl.match(/stream\/view\/id\/(\d+)/) || courseUrl.match(/[?&]id=(\d+)/);
   if (streamMatch && COURSE_BY_STREAM_ID[streamMatch[1]]) {
     return COURSE_BY_STREAM_ID[streamMatch[1]];
   }
@@ -361,16 +325,23 @@ function applyActivity(store, activity) {
 
 function summarizeLevels(user) {
   return LEVELS.map((level) => {
-    const stats = Object.values(user.course_stats).filter((course) => {
-      return course.type === "main" && course.level === level.level;
+    const levelCourses = Object.values(COURSE_CATALOG).filter((course) => {
+      return isDashboardMainCourse(course) && levelBucket(course.level) === level.level;
     });
+    const levelCourseIds = new Set(levelCourses.map((course) => course.course_id));
+    const stats = Object.values(user.course_stats).filter((course) => levelCourseIds.has(course.course_id));
     const openedLessons = stats.reduce((sum, course) => sum + course.opened_lessons, 0);
-    const totalLessons = level.total_lessons || stats.reduce((sum, course) => sum + course.total_lessons, 0);
+    const totalLessons = levelCourses.reduce((sum, course) => sum + course.total_lessons, 0);
+    const totalCycles = levelCourses.reduce((sum, course) => sum + course.total_cycles, 0);
+    const openedCycles = stats.reduce((sum, course) => sum + course.opened_cycles, 0);
     const progress = totalLessons ? Math.min(100, Math.round((openedLessons / totalLessons) * 100)) : 0;
 
     return {
       ...level,
+      total_lessons: totalLessons,
+      total_cycles: totalCycles,
       opened_lessons: openedLessons,
+      opened_cycles: openedCycles,
       progress_percent: progress
     };
   });
@@ -378,18 +349,54 @@ function summarizeLevels(user) {
 
 function getCurrentLevel(user) {
   const mainLevels = Object.values(user.course_stats)
-    .filter((course) => course.type === "main" && course.opened_lessons > 0)
+    .filter((course) => course.type === "main" && course.opened_lessons > 0 && isCurrentCourse(COURSE_CATALOG[course.course_id]))
     .sort((a, b) => b.opened_lessons - a.opened_lessons);
 
   if (mainLevels[0]?.level) {
-    return mainLevels[0].level;
+    return levelBucket(mainLevels[0].level);
   }
 
-  return user.last_activity?.level?.split("-")[0] || "A1";
+  return levelBucket(user.last_activity?.level || "A1") || "A1";
+}
+
+function getRecommendations(currentLevel) {
+  const recommended = Object.values(COURSE_CATALOG)
+    .filter((course) => isCurrentCourse(course) && course.recommended)
+    .filter((course) => levelMatches(course.level, currentLevel))
+    .sort((a, b) => Number(a.order || 999) - Number(b.order || 999));
+
+  const fallback = Object.values(COURSE_CATALOG)
+    .filter((course) => isCurrentCourse(course) && course.recommended)
+    .sort((a, b) => Number(a.order || 999) - Number(b.order || 999));
+
+  return (recommended.length ? recommended : fallback).slice(0, 8).map((course) => ({
+    course_id: course.course_id,
+    title: course.title,
+    subtitle: course.section || course.type,
+    level: course.level,
+    type: course.type,
+    total_lessons: course.total_lessons,
+    url: course.url,
+    accent: course.accent,
+    icon: course.icon
+  }));
+}
+
+function buildCatalogSummary() {
+  const current = Object.values(COURSE_CATALOG).filter(isCurrentCourse);
+  const count = (type) => current.filter((course) => course.type === type).length;
+
+  return [
+    { title: "Основные курсы", count: count("main") },
+    { title: "Практика и закрепление", count: count("practice") },
+    { title: "Марафоны", count: count("marathon") },
+    { title: "DELF / DALF", count: count("exam") },
+    { title: "Архив", count: Object.values(COURSE_CATALOG).filter((course) => course.status === "archive").length }
+  ];
 }
 
 function buildDashboard(userKey, user = emptyUserRecord()) {
-  const allCourses = Object.values(COURSE_CATALOG);
+  const allCourses = Object.values(COURSE_CATALOG).filter(isCurrentCourse);
   const currentLevel = getCurrentLevel(user);
   const recentCourses = user.recent_courses
     .map((courseId) => user.course_stats[courseId] || buildCourseStats(courseId))
@@ -409,9 +416,10 @@ function buildDashboard(userKey, user = emptyUserRecord()) {
       opened_lessons: openedLessons,
       percent: totalLessons ? Math.min(100, Math.round((openedLessons / totalLessons) * 100)) : 0
     },
-    recommendations: RECOMMENDATIONS_BY_LEVEL[currentLevel] || RECOMMENDATIONS_BY_LEVEL.A1,
+    recommendations: getRecommendations(currentLevel),
     news: NEWS_ITEMS,
-    catalog: allCourses
+    catalog: allCourses,
+    catalog_summary: buildCatalogSummary()
   };
 }
 

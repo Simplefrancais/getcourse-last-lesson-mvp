@@ -84,11 +84,19 @@
   }
 
   function detectCourseFromPage() {
-    const links = Array.from(document.querySelectorAll("a[href*='/teach/control/stream/view/id/']"));
+    const links = Array.from(document.querySelectorAll("a[href*='/teach/control/stream/view']"));
     for (const link of links) {
-      const match = link.href.match(/stream\/view\/id\/(\d+)/);
+      const match = link.href.match(/stream\/view\/id\/(\d+)/) || link.href.match(/[?&]id=(\d+)/);
       if (match && COURSE_CATALOG[match[1]]) {
         return COURSE_CATALOG[match[1]];
+      }
+      if (match) {
+        return {
+          course_id: "",
+          training_title: link.textContent.trim().replace(/\s+/g, " ") || "",
+          level: "",
+          course_url: link.href
+        };
       }
     }
 
@@ -107,11 +115,11 @@
   }
 
   function shouldTrack(meta) {
-    const knownCourse = meta.course_id && meta.course_id !== "unknown-course";
-    if (!knownCourse) {
-      console.info("[GC Last Lesson] Не найден course_id. Событие не отправлено.", meta);
+    const hasCourseSignal = (meta.course_id && meta.course_id !== "unknown-course") || meta.course_url;
+    if (!hasCourseSignal) {
+      console.info("[GC Last Lesson] Не найден course_id/course_url. Событие не отправлено.", meta);
     }
-    return knownCourse;
+    return hasCourseSignal;
   }
 
   function dedupeKey(payload) {

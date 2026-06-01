@@ -5,8 +5,10 @@
 ## Что входит
 
 - `server.js` - маленький Node.js API без внешних зависимостей.
+- `config/course-catalog.json` - каталог курсов, экспортированный из таблицы "Все курсы 2026.xlsx".
 - `snippets/lesson-tracker.js` - JS для страниц уроков тестового курса.
 - `snippets/home-widget-getcourse.js` - JS для новой dashboard-страницы GetCourse.
+- `scripts/export-course-catalog.py` - локальный скрипт для пересборки каталога из Excel.
 - `public/index.html` - локальная тестовая главная.
 - `data/last-activity.json` - локальное хранилище появится автоматически после первого запуска.
 
@@ -57,19 +59,21 @@ node server.js
 
 Новости редактируются вручную в массиве `NEWS_ITEMS` внутри `server.js`.
 
+## Обновить каталог из таблицы
+
+```bash
+/Users/julielee/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/export-course-catalog.py "/Users/julielee/Downloads/Все курсы 2026.xlsx" config/course-catalog.json
+```
+
+После этого нужно загрузить обновлённый `config/course-catalog.json` на GitHub и задеплоить Render.
+
+Новые курсы подтягиваются через таблицу: если есть стабильный `Course ID`, ссылка GetCourse, тип, уровень и статус, backend сможет учитывать курс без переписывания логики.
+
 ## Как вставить на урок тестового курса
 
 В GetCourse на страницах уроков вставить код из `snippets/lesson-tracker.js`.
 
-Сейчас трекер знает 5 тестовых курсов:
-
-- `french-a1-plus`
-- `french-a2-1`
-- `phonetics-50`
-- `plus-que-parfait-marathon`
-- `articles-marathon`
-
-Если GetCourse не даёт определить курс автоматически, перед трекером можно добавить:
+Трекер сначала пытается определить курс по ссылке на тренинг GetCourse. Если GetCourse не даёт определить курс автоматически, перед трекером можно добавить:
 
 ```html
 <script>
