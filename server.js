@@ -49,6 +49,14 @@ const COURSE_BY_STREAM_ID = Object.values(COURSE_CATALOG).reduce((index, course)
   return index;
 }, {});
 
+const COURSE_ALIASES = {
+  "глаголы 3-й группы": "irregular-verbs",
+  "2-й тип спряжения": "irregular-verbs",
+  aller: "irregular-verbs",
+  "марафон по отрицанию": "negation-marathon",
+  отрицание: "negation-marathon"
+};
+
 const LEVELS = [
   { level: "A1", title: "Начальный", accent: "#75d56f" },
   { level: "A2", title: "Базовый", accent: "#4d8cff" },
@@ -187,6 +195,10 @@ function normalizeId(value) {
   return String(value || "").trim();
 }
 
+function normalizeText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 function isCurrentCourse(course) {
   return Boolean(course?.active) && course.status !== "archive";
 }
@@ -226,10 +238,15 @@ function findCourse(payload) {
     payload.training_title,
     payload.course_title,
     payload.lesson_title
-  ].map((title) => String(title || "").trim().toLowerCase()).filter(Boolean);
+  ].map(normalizeText).filter(Boolean);
+
+  const alias = Object.keys(COURSE_ALIASES).find((key) => titleCandidates.some((title) => title.includes(key)));
+  if (alias && COURSE_CATALOG[COURSE_ALIASES[alias]]) {
+    return COURSE_CATALOG[COURSE_ALIASES[alias]];
+  }
 
   return Object.values(COURSE_CATALOG).find((course) => {
-    const courseTitle = course.title.toLowerCase();
+    const courseTitle = normalizeText(course.title);
     return titleCandidates.some((title) => courseTitle === title || title.includes(courseTitle) || courseTitle.includes(title));
   }) || null;
 }

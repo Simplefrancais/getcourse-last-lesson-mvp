@@ -30,14 +30,15 @@
     .sf-actions { display:flex; align-items:center; gap:12px; }
     .sf-primary { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 24px; border:0; border-radius:8px; background:#5b4eea; color:#fff !important; text-decoration:none !important; font-weight:850; cursor:pointer; }
     .sf-play { width:46px; height:46px; border-radius:999px; border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.08); color:#fff !important; display:inline-flex; align-items:center; justify-content:center; text-decoration:none !important; font-weight:900; }
-    .sf-recent { display:flex; gap:14px; overflow-x:auto; padding:0 0 4px; scroll-snap-type:x proximity; }
+    .sf-recent { display:flex; gap:12px; overflow-x:auto; padding:0 0 4px; scroll-snap-type:x proximity; }
     .sf-recent-card, .sf-level-card { min-height:92px; border-radius:8px; padding:16px; background:linear-gradient(135deg,#08172a,#10243a); color:#fff; box-shadow:0 12px 28px rgba(17,34,63,.12); }
-    .sf-recent-card { display:grid; grid-template-columns:56px minmax(0,1fr); gap:14px; align-items:center; flex:0 0 min(360px, 86vw); scroll-snap-align:start; }
-    .sf-icon { width:50px; height:50px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:var(--accent,#75d56f); font-weight:900; font-size:18px; }
-    .sf-recent-card h3, .sf-level-card h3 { margin:0 0 5px; color:#fff; font-size:16px; line-height:1.2; }
+    .sf-recent-card { display:grid; grid-template-columns:46px minmax(0,1fr); gap:12px; align-items:center; flex:0 0 min(285px, 82vw); scroll-snap-align:start; padding:13px; }
+    .sf-icon { width:42px; height:42px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:var(--accent,#75d56f); font-weight:900; font-size:16px; }
+    .sf-recent-card h3, .sf-level-card h3 { margin:0 0 5px; color:#fff; font-size:15px; line-height:1.18; }
+    .sf-recent-card h3 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .sf-recent-card p, .sf-level-card p { margin:0 0 10px; color:rgba(255,255,255,.72); font-size:13px; }
-    .sf-mini-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:10px; align-items:center; }
-    .sf-mini-percent { color:#fff; font-weight:850; text-align:right; font-size:13px; }
+    .sf-mini-row { display:grid; grid-template-columns:minmax(0,1fr) 34px; gap:8px; align-items:center; }
+    .sf-mini-percent { color:#fff; font-weight:850; text-align:right; font-size:12px; }
     .sf-path-section { padding:18px; border:1px solid #dbe3ef; border-radius:8px; background:#fff; box-shadow:0 14px 35px rgba(17,34,63,.07); }
     .sf-path-section .sf-heading h2 { font-size:23px; }
     .sf-level-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
@@ -71,6 +72,7 @@
     .sf-news-time { display:block; margin-bottom:3px; color:#344bd8; font-size:11px; font-weight:900; text-transform:uppercase; }
     .sf-action-grid { display:grid; grid-template-columns:1fr; gap:9px; }
     .sf-action { min-height:42px; border:1px solid #e0e7f2; border-radius:8px; background:#fff; color:var(--sf-ink) !important; text-decoration:none !important; display:flex; align-items:center; justify-content:flex-start; padding:0 12px; text-align:left; font-size:13px; font-weight:850; }
+    .sf-disabled { opacity:.58; cursor:default; pointer-events:none; }
     .sf-catalog-box { opacity:.58; box-shadow:none; background:rgba(255,255,255,.58); border-style:dashed; }
     .sf-catalog-box:hover { opacity:.9; }
     .sf-catalog-box h2 { font-size:15px; }
@@ -108,6 +110,22 @@
 
   function progressBar(percent) {
     return '<div class="sf-progress" style="--value:' + Number(percent || 0) + '%"><span></span></div>';
+  }
+
+  function topLink(label, url) {
+    return url ? '<a class="sf-link" href="' + escapeHtml(url) + '">' + escapeHtml(label) + '</a>' : '<span class="sf-link sf-disabled">' + escapeHtml(label) + '</span>';
+  }
+
+  function actionLink(label, url) {
+    return url ? '<a class="sf-action" href="' + escapeHtml(url) + '">' + escapeHtml(label) + '</a>' : '<span class="sf-action sf-disabled">' + escapeHtml(label) + '</span>';
+  }
+
+  function cardLinkStart(className, url, attrs) {
+    return url && url !== "#" ? '<a class="' + className + '" href="' + escapeHtml(url) + '"' + (attrs || "") + '>' : '<div class="' + className + ' sf-disabled"' + (attrs || "") + '>';
+  }
+
+  function cardLinkEnd(url) {
+    return url && url !== "#" ? '</a>' : '</div>';
   }
 
   function renderEmpty() {
@@ -150,7 +168,7 @@
       '</article>';
     }).join("");
 
-    return '<section class="sf-section"><div class="sf-heading"><h2>Недавно открывали</h2><a class="sf-link" href="#">Смотреть все</a></div><div class="sf-recent">' + (items || '<div class="sf-empty">Пока нет недавно открытых курсов.</div>') + '</div></section>';
+    return '<section class="sf-section"><div class="sf-heading"><h2>Недавно открывали</h2>' + topLink("Смотреть все", "") + '</div><div class="sf-recent">' + (items || '<div class="sf-empty">Пока нет недавно открытых курсов.</div>') + '</div></section>';
   }
 
   function renderLevels(levels) {
@@ -159,25 +177,27 @@
         '<strong>' + escapeHtml(level.level) + '</strong><h3>' + escapeHtml(level.title) + '</h3>' +
         '<p>' + level.opened_lessons + (level.total_lessons ? ' из ' + level.total_lessons : '') + ' уроков</p>' +
         '<div class="sf-circle" style="--value:' + Number(level.progress_percent || 0) + '"><span>' + level.progress_percent + '%</span></div>' +
-        '<a class="sf-open" href="#">Открыть</a>' +
+        '<span class="sf-open sf-disabled">Открыть</span>' +
       '</article>';
     }).join("");
 
-    return '<section class="sf-section sf-path-section"><div class="sf-heading"><h2>Мой путь</h2><a class="sf-link" href="#">Подробнее</a></div><div class="sf-level-grid">' + cards + '</div></section>';
+    return '<section class="sf-section sf-path-section"><div class="sf-heading"><h2>Мой путь</h2>' + topLink("Подробнее", "") + '</div><div class="sf-level-grid">' + cards + '</div></section>';
   }
 
   function renderRecommendations(items) {
     const cards = items.slice(0, 5).map((item) => {
-      return '<a class="sf-rec" style="--accent:' + escapeHtml(item.accent || "#5b5ff0") + '" href="' + escapeHtml(item.url || "#") + '"><div><div class="sf-rec-head"><span class="sf-tag">' + escapeHtml(item.level) + '</span><span class="sf-rec-icon">' + escapeHtml(item.icon || item.level || "FR") + '</span></div><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.subtitle || item.type) + '</p></div><div class="sf-rec-foot"><p>' + (item.total_lessons ? item.total_lessons + ' уроков' : 'Скоро') + '</p><span class="sf-rec-arrow">›</span></div></a>';
+      const attrs = ' style="--accent:' + escapeHtml(item.accent || "#5b5ff0") + '"';
+      return cardLinkStart("sf-rec", item.url, attrs) + '<div><div class="sf-rec-head"><span class="sf-tag">' + escapeHtml(item.level) + '</span><span class="sf-rec-icon">' + escapeHtml(item.icon || item.level || "FR") + '</span></div><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.subtitle || item.type) + '</p></div><div class="sf-rec-foot"><p>' + (item.total_lessons ? item.total_lessons + ' уроков' : 'Скоро') + '</p><span class="sf-rec-arrow">›</span></div>' + cardLinkEnd(item.url);
     }).join("");
 
-    return '<section class="sf-section"><div class="sf-heading"><h2>Для вас сейчас полезно</h2><a class="sf-link" href="#">Подобрать ещё</a></div><div class="sf-recs">' + cards + '</div></section>';
+    return '<section class="sf-section"><div class="sf-heading"><h2>Для вас сейчас полезно</h2>' + topLink("Подобрать ещё", "") + '</div><div class="sf-recs">' + cards + '</div></section>';
   }
 
   function renderSide(dashboard) {
     const platform = dashboard.platform_progress || {};
     const news = (dashboard.news || []).slice(0, 4).map((item) => {
-      return '<a class="sf-news" href="' + escapeHtml(item.url || "#") + '" style="text-decoration:none; color:inherit"><div class="sf-icon" style="--accent:' + escapeHtml(item.accent || "#75d56f") + '">' + escapeHtml(item.icon || item.level || "FR") + '</div><div><span class="sf-news-time">' + escapeHtml(item.time_label || item.date || "") + '</span><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(item.subtitle || item.level || "") + '</small></div></a>';
+      const attrs = ' style="text-decoration:none; color:inherit"';
+      return cardLinkStart("sf-news", item.url, attrs) + '<div class="sf-icon" style="--accent:' + escapeHtml(item.accent || "#75d56f") + '">' + escapeHtml(item.icon || item.level || "FR") + '</div><div><span class="sf-news-time">' + escapeHtml(item.time_label || item.date || "") + '</span><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(item.subtitle || item.level || "") + '</small></div>' + cardLinkEnd(item.url);
     }).join("");
     const catalogRows = (dashboard.catalog_summary || []).slice(0, 5).map((item) => {
       return '<div class="sf-catalog-row"><span>' + escapeHtml(item.title) + '</span><b>' + escapeHtml(item.count) + '</b></div>';
@@ -192,7 +212,7 @@
         '<div class="sf-news"><div class="sf-icon">100</div><div><b>Цель</b><small>Следующая отметка: 100 уроков</small></div></div>' +
       '</div>' +
       '<div class="sf-box"><h2>Полезное</h2><div class="sf-action-grid">' +
-        '<a class="sf-action" href="#">Задать вопрос</a><a class="sf-action" href="#">Навигатор по платформе</a><a class="sf-action" href="#">Предложить тему курса</a>' +
+        actionLink("Задать вопрос", "") + actionLink("Навигатор по платформе", "") + actionLink("Предложить тему курса", "") +
       '</div></div>' +
       '<div class="sf-box sf-catalog-box"><h2>Каталог</h2>' +
         catalogRows +
@@ -211,7 +231,7 @@
         renderRecent(dashboard.recent_courses || []) +
         renderRecommendations(dashboard.recommendations || []) +
         renderLevels(dashboard.levels || []) +
-        '<section class="sf-section"><div class="sf-archive"><div><h3>Архив прошлых версий курсов (2017-2023)</h3><p>Старые версии курсов будут добавлены позже.</p></div><a class="sf-secondary" href="#">Перейти в архив</a></div></section>' +
+        '<section class="sf-section"><div class="sf-archive"><div><h3>Архив прошлых версий курсов (2017-2023)</h3><p>Старые версии курсов будут добавлены позже.</p></div><span class="sf-secondary sf-disabled">Перейти в архив</span></div></section>' +
       '</main>' +
       renderSide(dashboard) +
     '</div>';

@@ -38,6 +38,13 @@
       stream_id: "386812694"
     }
   ];
+  const COURSE_ALIASES = {
+    "глаголы 3-й группы": "irregular-verbs",
+    "2-й тип спряжения": "irregular-verbs",
+    "aller": "irregular-verbs",
+    "марафон по отрицанию": "negation-marathon",
+    "отрицание": "negation-marathon"
+  };
 
   function text(selector) {
     const element = document.querySelector(selector);
@@ -61,6 +68,17 @@
   function getStreamId(url) {
     const match = String(url || "").match(/stream\/view\/id\/(\d+)/) || String(url || "").match(/[?&]id=(\d+)/);
     return match ? match[1] : "";
+  }
+
+  function normalizeText(value) {
+    return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+  }
+
+  function findCourseByAlias(catalog, pageText) {
+    const normalized = normalizeText(pageText);
+    const alias = Object.keys(COURSE_ALIASES).find((key) => normalized.includes(key));
+    if (!alias) return null;
+    return catalog.find((course) => course.course_id === COURSE_ALIASES[alias]) || null;
   }
 
   async function loadCatalog() {
@@ -122,14 +140,15 @@
       return index;
     }, {});
     const links = Array.from(document.querySelectorAll("a[href*='/teach/control/stream/view']"));
+    let fallbackLink = null;
 
     for (const link of links) {
       const streamId = getStreamId(link.href);
       if (streamId && byStreamId[streamId]) {
         return byStreamId[streamId];
       }
-      if (streamId) {
-        return {
+      if (streamId && !fallbackLink) {
+        fallbackLink = {
           course_id: "",
           training_title: link.textContent.trim().replace(/\s+/g, " ") || "",
           level: "",
@@ -139,8 +158,9 @@
     }
 
     const pageText = document.body ? document.body.textContent : "";
-    const normalizedPageText = pageText.toLowerCase();
-    return catalog.find((course) => course.training_title && normalizedPageText.includes(course.training_title.toLowerCase())) || null;
+    const normalizedPageText = normalizeText(pageText);
+    const titleMatch = catalog.find((course) => course.training_title && normalizedPageText.includes(normalizeText(course.training_title)));
+    return titleMatch || findCourseByAlias(catalog, pageText) || fallbackLink;
   }
 
   function getCourseMeta(catalog) {
