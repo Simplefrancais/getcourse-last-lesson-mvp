@@ -222,8 +222,16 @@ function findCourse(payload) {
     return COURSE_BY_STREAM_ID[streamMatch[1]];
   }
 
-  const title = String(payload.training_title || payload.course_title || "").trim().toLowerCase();
-  return Object.values(COURSE_CATALOG).find((course) => course.title.toLowerCase() === title) || null;
+  const titleCandidates = [
+    payload.training_title,
+    payload.course_title,
+    payload.lesson_title
+  ].map((title) => String(title || "").trim().toLowerCase()).filter(Boolean);
+
+  return Object.values(COURSE_CATALOG).find((course) => {
+    const courseTitle = course.title.toLowerCase();
+    return titleCandidates.some((title) => courseTitle === title || title.includes(courseTitle) || courseTitle.includes(title));
+  }) || null;
 }
 
 function parseLessonId(payload) {
