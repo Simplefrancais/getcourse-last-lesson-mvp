@@ -419,6 +419,11 @@ function applyActivity(store, activity) {
   const courseId = activity.course_id || "unknown-course";
   const lessonId = activity.lesson_id || activity.lesson_url;
 
+  if (!COURSE_CATALOG[courseId]) {
+    store.users[activity.user_key] = user;
+    return user;
+  }
+
   user.last_activity = activity;
   user.recent_courses = [courseId, ...user.recent_courses.filter((id) => id !== courseId)].slice(0, 8);
   user.opened_lessons[courseId] = unique([...(user.opened_lessons[courseId] || []), lessonId]);
@@ -511,15 +516,19 @@ function buildCatalogSummary() {
 function buildDashboard(userKey, user = emptyUserRecord()) {
   const allCourses = Object.values(COURSE_CATALOG).filter(isCurrentCourse);
   const currentLevel = getCurrentLevel(user);
+  const lastActivity = COURSE_CATALOG[user.last_activity?.course_id] ? user.last_activity : null;
   const recentCourses = user.recent_courses
+    .filter((courseId) => COURSE_CATALOG[courseId])
     .map((courseId) => user.course_stats[courseId] || buildCourseStats(courseId))
     .filter(Boolean);
   const totalLessons = allCourses.reduce((sum, course) => sum + course.total_lessons, 0);
-  const openedLessons = Object.values(user.opened_lessons).reduce((sum, lessons) => sum + unique(lessons).length, 0);
+  const openedLessons = Object.entries(user.opened_lessons).reduce((sum, [courseId, lessons]) => {
+    return COURSE_CATALOG[courseId] ? sum + unique(lessons).length : sum;
+  }, 0);
 
   return {
     user_key: userKey,
-    last_activity: user.last_activity,
+    last_activity: lastActivity,
     recent_courses: recentCourses,
     course_stats: user.course_stats,
     levels: summarizeLevels(user),
