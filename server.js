@@ -272,7 +272,7 @@ function isGetCourseLessonUrl(value) {
   }
 }
 
-function buildCourseStats(courseId, openedLessons = [], completedLessons = []) {
+function buildCourseStats(courseId, openedLessons = [], completedLessons = [], lastActivity = null) {
   const course = COURSE_CATALOG[courseId] || {
     course_id: courseId,
     title: courseId,
@@ -302,7 +302,10 @@ function buildCourseStats(courseId, openedLessons = [], completedLessons = []) {
     lesson_progress_percent: lessonProgress,
     structural_progress_percent: 0,
     accent: course.accent || "#5b5ff0",
-    icon: course.icon || "FR"
+    icon: course.icon || "FR",
+    last_lesson_url: lastActivity?.lesson_url || "",
+    last_lesson_title: lastActivity?.lesson_title || "",
+    last_opened_at: lastActivity?.timestamp || ""
   };
 }
 
@@ -465,7 +468,8 @@ function applyActivity(store, activity) {
   user.course_stats[courseId] = buildCourseStats(
     courseId,
     user.opened_lessons[courseId] || [],
-    user.completed_lessons[courseId] || []
+    user.completed_lessons[courseId] || [],
+    activity
   );
   store.users[activity.user_key] = user;
   return user;
@@ -490,7 +494,8 @@ function summarizeLevels(user) {
       total_cycles: totalCycles,
       opened_lessons: openedLessons,
       opened_cycles: openedCycles,
-      progress_percent: progress
+      progress_percent: progress,
+      url: levelCourses[0]?.url || ""
     };
   });
 }
