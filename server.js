@@ -65,6 +65,16 @@ const LEVELS = [
 ];
 
 const NEWS_ITEMS = [
+    {
+    title: "DELF A1: аудирование",
+    subtitle: "Новый курс: 10 аудирований",
+    type: "exam",
+    level: "A1",
+    time_label: "Сегодня",
+    url: COURSE_CATALOG["delf-a1-listening"].url,
+    icon: "A1",
+    accent: "#4f5cf6"
+  },
   {
     title: "Новый диктант",
     subtitle: "Диктант A2 N15",
