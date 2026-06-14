@@ -615,6 +615,24 @@
       "order": 999
     },
     {
+  "course_id": "delf-a1-listening",
+  "title": "DELF A1: аудирование",
+  "url": "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/935610818",
+  "stream_id": "935610818",
+  "type": "exam",
+  "section": "DELF / DALF",
+  "level": "A1",
+  "total_lessons": 10,
+  "total_cycles": 0,
+  "status": "current",
+  "active": true,
+  "show_on_dashboard": true,
+  "recommended": true,
+  "cover_needed": false,
+  "cover": "",
+  "order": 120
+}
+    {
       "course_id": "dalf-c1",
       "title": "DALF C1",
       "url": "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/249235073",
