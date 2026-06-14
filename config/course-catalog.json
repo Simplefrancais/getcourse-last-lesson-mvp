@@ -631,8 +631,8 @@
   "cover_needed": false,
   "cover": "",
   "order": 120
-}
-    {
+     },
+     {
       "course_id": "dalf-c1",
       "title": "DALF C1",
       "url": "https://simplefrancais.getcourse.ru/teach/control/stream/view/id/249235073",
